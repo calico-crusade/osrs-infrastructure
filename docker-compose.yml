@@ -1,0 +1,73 @@
+version: "3.3"
+volumes:
+  osrs-postgres-vol:
+  osrs-mongo-vol:
+services:
+  osrs-nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx:/etc/nginx
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - NGINX_HOST=${HOSTNAME}
+  osrs-mongodb:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+    volumes:
+      - osrs-mongo-vol:/data/db
+    ports:
+      - 27017:27017
+  osrs-postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_HOST}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASS}
+    volumes:
+      - osrs-postgres-vol:/var/lib/postgresql/data
+    ports:
+      - 5432:5432 
+  osrs-bot:
+    image: ghcr.io/calico-crusade/osrs-clan-tracker-bot/osrsbot:latest
+    restart: always
+    environment:
+      - Database:ConnectionString=User ID=${POSTGRES_USER};Password=${POSTGRES_PASS};Host=osrs-postgres;Database=${POSTGRES_HOST}
+      - Modmail:ConnectionString=mongodb://${MONGO_USER}:${MONGO_PASS}@osrs-mongodb
+      - Modmail:DatabaseName=${MONGO_NAME}
+    depends_on:
+      - osrs-postgres
+      - osrs-mongodb
+  osrs-ui:
+    image: ghcr.io/calico-crusade/osrs-clan-tracker-bot/osrsui:latest
+    restart: always
+    ports:
+      - 8884:80
+  osrs-api:
+    image: ghcr.io/calico-crusade/osrs-clan-tracker-bot/osrsapi:latest
+    restart: always
+    environment:
+      - Database:ConnectionString=User ID=${POSTGRES_USER};Password=${POSTGRES_PASS};Host=osrs-postgres;Database=${POSTGRES_HOST}
+      - Modmail:ConnectionString=mongodb://${MONGO_USER}:${MONGO_PASS}@osrs-mongodb
+      - Modmail:DatabaseName=${MONGO_NAME}
+    depends_on:
+      - osrs-postgres
+      - osrs-mongodb
+    ports:
+      - 8885:80
+  osrs-modmail:
+    image: kyb3rr/modmail
+    restart: always
+    environment:
+      - TOKEN=${DISCORD_MODMAIL_TOKEN}
+      - LOG_URL=https://logs.${HOSTNAME}/
+      - GUILD_ID=${DISCORD_GUILD_ID}
+      - MODMAIL_GUILD_ID=${DISCORD_GUILD_ID}
+      - OWNERS=${DISCORD_OWNER_IDS}
+      - CONNECTION_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@osrs-mongodb
