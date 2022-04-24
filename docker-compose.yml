@@ -35,7 +35,7 @@ services:
     ports:
       - 5432:5432 
   osrs-bot:
-    image: ghcr.io/calico-crusade/osrs-clan-tracker-bot/osrsbot:latest
+    image: docker.pkg.github.com/calico-crusade/osrs-clan-tracker-bot/osrsbot:latest
     restart: always
     environment:
       - Database:ConnectionString=User ID=${POSTGRES_USER};Password=${POSTGRES_PASS};Host=osrs-postgres;Database=${POSTGRES_HOST}
@@ -45,12 +45,12 @@ services:
       - osrs-postgres
       - osrs-mongodb
   osrs-ui:
-    image: ghcr.io/calico-crusade/osrs-clan-tracker-bot/osrsui:latest
+    image: docker.pkg.github.com/calico-crusade/osrs-clan-tracker-bot/osrsui:latest
     restart: always
     ports:
       - 8884:80
   osrs-api:
-    image: ghcr.io/calico-crusade/osrs-clan-tracker-bot/osrsapi:latest
+    image: docker.pkg.github.com/calico-crusade/osrs-clan-tracker-bot/osrsapi:latest
     restart: always
     environment:
       - Database:ConnectionString=User ID=${POSTGRES_USER};Password=${POSTGRES_PASS};Host=osrs-postgres;Database=${POSTGRES_HOST}
